@@ -27,4 +27,8 @@ Route::get('/route-clear', function () {
     Artisan::call('route:clear');
     return 'Route cache cleared!';
 });
+
+Route::get('/check', function () {
+    return 'Laravel is alive!';
+});
 require __DIR__.'/auth.php';
