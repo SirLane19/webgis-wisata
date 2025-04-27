@@ -18,10 +18,13 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-
 Route::get('/migrate', function () {
     Artisan::call('migrate');
     return 'Migrate sukses!';
 });
 
+Route::get('/route-clear', function () {
+    Artisan::call('route:clear');
+    return 'Route cache cleared!';
+});
 require __DIR__.'/auth.php';
