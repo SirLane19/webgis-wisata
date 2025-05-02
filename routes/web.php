@@ -4,6 +4,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DestinationController;
 use App\Http\Controllers\ExploreController;
+use App\Models\Destination;
+use App\Models\Category;
 
 // Halaman Landing Page
 Route::get('/', function () {
@@ -13,10 +15,13 @@ Route::get('/', function () {
 // Halaman Eksplorasi (Publik)
 Route::get('/explore', [ExploreController::class, 'index'])->name('explore');
 
-// Dashboard (Hanya untuk user login & verified)
+// Dashboard (untuk admin login)
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', function () {
-        return view('dashboard');
+        return view('dashboard', [
+            'totalDestinations' => Destination::count(),
+            'totalCategories' => Category::count(),
+        ]);
     })->name('dashboard');
 });
 
