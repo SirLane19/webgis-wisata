@@ -3,6 +3,7 @@
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DestinationController;
+use App\Http\Controllers\ExploreController;
 
 
 Route::get('/', function () {
@@ -22,5 +23,7 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth'])->group(function () {
     Route::resource('destinations', DestinationController::class);
 });
+
+Route::get('/explore', [ExploreController::class, 'index'])->name('explore');
 
 require __DIR__.'/auth.php';
