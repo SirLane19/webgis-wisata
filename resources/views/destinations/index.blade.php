@@ -14,9 +14,10 @@
         </div>
     @endif
 
-    {{-- Form Filter dan Search --}}
-    <form method="GET" action="{{ route('destinations.index') }}" class="mb-6 flex flex-col sm:flex-row sm:items-center sm:space-x-4 space-y-2 sm:space-y-0">
-        <input type="text" name="search" placeholder="Cari destinasi..." value="{{ request('search') }}" class="border p-2 rounded w-full sm:w-1/3" />
+    {{-- Form Filter, Search, Sort, Reset --}}
+    <form method="GET" action="{{ route('destinations.index') }}" class="mb-6 flex flex-col sm:flex-row sm:items-center sm:flex-wrap gap-2 sm:gap-4">
+        <input type="text" name="search" placeholder="Cari destinasi..." value="{{ request('search') }}"
+            class="border p-2 rounded w-full sm:w-1/4" />
 
         <select name="category" class="border p-2 rounded w-full sm:w-1/4">
             <option value="">-- Semua Kategori --</option>
@@ -27,7 +28,21 @@
             @endforeach
         </select>
 
-        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Terapkan</button>
+        <select name="sort" class="border p-2 rounded w-full sm:w-1/5">
+            <option value="">-- Urutkan Berdasarkan --</option>
+            <option value="name" {{ request('sort') == 'name' ? 'selected' : '' }}>Nama</option>
+            <option value="category" {{ request('sort') == 'category' ? 'selected' : '' }}>Kategori</option>
+        </select>
+
+        <select name="order" class="border p-2 rounded w-full sm:w-1/5">
+            <option value="asc" {{ request('order') == 'asc' ? 'selected' : '' }}>A-Z</option>
+            <option value="desc" {{ request('order') == 'desc' ? 'selected' : '' }}>Z-A</option>
+        </select>
+
+        <div class="flex gap-2">
+            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Terapkan</button>
+            <a href="{{ route('destinations.index') }}" class="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400">Reset</a>
+        </div>
     </form>
 
     {{-- Tabel Data --}}
@@ -88,12 +103,10 @@
 {{-- Leaflet JS --}}
 <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
 
-{{-- Custom CSS for map --}}
 <style>
     #map { height: 500px; }
 </style>
 
-{{-- Inisialisasi Peta --}}
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         const map = L.map('map').setView([-6.2, 106.8], 12);
