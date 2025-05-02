@@ -2,7 +2,8 @@
 
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Artisan;
+use App\Http\Controllers\DestinationController;
+
 
 Route::get('/', function () {
     return view('welcome');
@@ -18,17 +19,8 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-Route::get('/migrate', function () {
-    Artisan::call('migrate');
-    return 'Migrate sukses!';
+Route::middleware(['auth'])->group(function () {
+    Route::resource('destinations', DestinationController::class);
 });
 
-Route::get('/route-clear', function () {
-    Artisan::call('route:clear');
-    return 'Route cache cleared!';
-});
-
-Route::get('/check', function () {
-    return 'Laravel is alive!';
-});
 require __DIR__.'/auth.php';
