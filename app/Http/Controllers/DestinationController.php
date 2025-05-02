@@ -21,7 +21,7 @@ class DestinationController extends Controller
             $query->where('category_id', $request->category);
         }
     
-        $destinations = $query->get();
+        $destinations = $query->paginate(10)->withQueryString();
         $categories = Category::all();
     
         return view('destinations.index', compact('destinations', 'categories'));

@@ -86,6 +86,12 @@
         </table>
     </div>
 
+    
+    {{-- Pagination --}}
+    <div class="mt-6">
+        {{ $destinations->links() }}
+    </div>
+
     {{-- Link Balik ke Dashboard --}}
     <div class="mt-6">
         <a href="{{ route('dashboard') }}" class="text-blue-600 hover:underline">← Kembali ke Dashboard</a>
