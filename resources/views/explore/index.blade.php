@@ -7,20 +7,44 @@
     {{-- Peta --}}
     <div class="mb-10">
         <h2 class="text-xl font-semibold mb-3">Peta Lokasi</h2>
-        <div id="map" class="w-full h-[500px] rounded shadow border"></div>
+        <div id="map" class="w-full h-[400px] rounded shadow border"></div>
     </div>
+
+    {{-- Form Pencarian & Filter --}}
+    <form method="GET" action="{{ route('explore') }}" class="mb-6 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+        <input type="text" name="search" placeholder="Cari nama destinasi..." value="{{ request('search') }}"
+            class="border p-2 rounded w-full sm:w-1/3" />
+
+        <select name="category" class="border p-2 rounded w-full sm:w-1/4">
+            <option value="">-- Semua Kategori --</option>
+            @foreach ($categories as $cat)
+                <option value="{{ $cat->id }}" {{ request('category') == $cat->id ? 'selected' : '' }}>
+                    {{ $cat->name }}
+                </option>
+            @endforeach
+        </select>
+
+        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Terapkan</button>
+    </form>
 
     {{-- Daftar Destinasi --}}
     <div>
-        <h2 class="text-xl font-semibold mb-4">Daftar Destinasi</h2>
+        <h2 class="text-xl font-semibold mb-4">Hasil Destinasi</h2>
         <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            @foreach ($destinations as $dest)
-                <div class="border rounded p-4 shadow hover:shadow-md transition">
+            @forelse ($destinations as $dest)
+                <div class="border rounded p-4 shadow hover:shadow-md transition bg-white">
                     <h3 class="text-lg font-bold">{{ $dest->name }}</h3>
-                    <p class="text-gray-600">{{ $dest->category->name ?? '-' }}</p>
-                    <p class="text-sm text-gray-500">{{ $dest->address }}</p>
+                    <p class="text-blue-600 text-sm">{{ $dest->category->name ?? '-' }}</p>
+                    <p class="text-gray-500 text-sm mb-2">{{ $dest->address }}</p>
                 </div>
-            @endforeach
+            @empty
+                <p class="text-center text-gray-500 col-span-3">Tidak ada destinasi ditemukan.</p>
+            @endforelse
+        </div>
+
+        {{-- Pagination --}}
+        <div class="mt-6">
+            {{ $destinations->withQueryString()->links() }}
         </div>
     </div>
 </div>
@@ -30,7 +54,7 @@
 <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
 
 <style>
-    #map { height: 500px; }
+    #map { height: 400px; }
 </style>
 
 <script>
@@ -45,7 +69,7 @@
             @if ($dest->latitude && $dest->longitude)
                 L.marker([{{ $dest->latitude }}, {{ $dest->longitude }}])
                     .addTo(map)
-                    .bindPopup(`<strong>{{ $dest->name }}</strong><br>{{ $dest->address }}`);
+                    .bindPopup(`<strong>{{ $dest->name }}</strong><br>{{ $dest->address }}<br><em>{{ $dest->category->name ?? '-' }}</em>`);
             @endif
         @endforeach
     });
