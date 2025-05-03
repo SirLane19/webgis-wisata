@@ -1,30 +1,24 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="max-w-6xl mx-auto py-10 px-6">
-    <h1 class="text-3xl font-bold text-gray-800 mb-6">📊 Dashboard Admin</h1>
+<div class="max-w-4xl mx-auto mt-10 px-4">
+    <h2 class="text-2xl font-bold mb-6">Selamat datang, {{ Auth::user()->name }}!</h2>
 
-    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
-        <div class="bg-white rounded shadow p-6 border">
-            <h2 class="text-sm text-gray-500 uppercase mb-1">Total Destinasi</h2>
-            <p class="text-3xl font-bold text-blue-600">{{ $totalDestinations }}</p>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <div class="bg-white border rounded shadow p-4 text-center">
+            <h3 class="text-lg font-semibold">Total Destinasi</h3>
+            <p class="text-3xl text-blue-600 mt-2">{{ $totalDestinations }}</p>
         </div>
-
-        <div class="bg-white rounded shadow p-6 border">
-            <h2 class="text-sm text-gray-500 uppercase mb-1">Kategori Aktif</h2>
-            <p class="text-3xl font-bold text-green-600">{{ $totalCategories }}</p>
+        <div class="bg-white border rounded shadow p-4 text-center">
+            <h3 class="text-lg font-semibold">Total Kategori</h3>
+            <p class="text-3xl text-green-600 mt-2">{{ $totalCategories }}</p>
         </div>
     </div>
 
-    <div class="flex gap-4 flex-wrap">
-        <a href="{{ route('destinations.create') }}"
-           class="bg-blue-600 text-white px-6 py-3 rounded hover:bg-blue-700 transition">
-            ➕ Tambah Destinasi Baru
-        </a>
-
-        <a href="{{ route('explore') }}"
-           class="bg-gray-200 text-gray-700 px-6 py-3 rounded hover:bg-gray-300 transition">
-            🌍 Lihat Halaman Publik
+    {{-- Tombol Akses ke Kelola Destinasi --}}
+    <div class="mt-8 text-center">
+        <a href="{{ route('destinations.index') }}" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition">
+            ➕ Kelola Destinasi
         </a>
     </div>
 </div>

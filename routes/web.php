@@ -15,8 +15,8 @@ Route::get('/', function () {
 // Halaman Eksplorasi (Publik)
 Route::get('/explore', [ExploreController::class, 'index'])->name('explore');
 
-// Dashboard (untuk admin login)
-Route::middleware(['auth', 'verified'])->group(function () {
+// Dashboard (khusus admin)
+Route::middleware(['auth', 'verified', 'isAdmin'])->group(function () {
     Route::get('/dashboard', function () {
         return view('dashboard', [
             'totalDestinations' => Destination::count(),
