@@ -157,14 +157,14 @@
             attribution: '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>'
         }).addTo(map);
 
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(function (position) {
-                userLat = position.coords.latitude;
-                userLng = position.coords.longitude;
-                L.marker([userLat, userLng]).addTo(map).bindPopup("📍 Lokasi Anda").openPopup();
-                map.setView([userLat, userLng], 13);
-            });
-        }
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function (position) {
+                    userLat = position.coords.latitude;
+                    userLng = position.coords.longitude;
+                    L.marker([userLat, userLng]).addTo(map).bindPopup("Lokasi Anda").openPopup();
+                    map.setView([userLat, userLng], 13);
+                });
+            }
 
         const data = @json($destinationArray);
         data.forEach(dest => {
