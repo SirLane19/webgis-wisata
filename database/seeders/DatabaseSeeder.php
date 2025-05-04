@@ -13,6 +13,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        User::truncate();
         // Seeder untuk user biasa
         User::factory()->create([
             'name' => 'Test User',

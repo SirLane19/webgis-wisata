@@ -16,9 +16,12 @@
     </div>
 
     {{-- Tombol Akses ke Kelola Destinasi --}}
-    <div class="mt-8 text-center">
-        <a href="{{ route('destinations.index') }}" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition">
-            ➕ Kelola Destinasi
+    <div class="flex justify-center gap-4 mt-6">
+        <a href="{{ route('destinations.index') }}" class="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+            <span>➕</span> Kelola Destinasi
+        </a>
+        <a href="{{ url('/explore') }}" class="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+            <span>🌍</span> Lihat Halaman Explore
         </a>
     </div>
 </div>

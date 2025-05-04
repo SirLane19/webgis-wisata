@@ -36,6 +36,7 @@
                     <h3 class="text-lg font-bold">{{ $dest->name }}</h3>
                     <p class="text-blue-600 text-sm">{{ $dest->category->name ?? '-' }}</p>
                     <p class="text-gray-500 text-sm mb-2">{{ $dest->address }}</p>
+                    <button onclick="showDetail({{ $dest->id }})" class="text-blue-600 hover:underline text-sm">Lihat Detail</button>
                 </div>
             @empty
                 <p class="text-center text-gray-500 col-span-3">Tidak ada destinasi ditemukan.</p>
@@ -49,6 +50,19 @@
     </div>
 </div>
 
+{{-- Modal Detail Destinasi --}}
+<div id="detailModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white p-6 rounded shadow max-w-md w-full">
+        <h2 class="text-xl font-bold mb-2" id="modalName"></h2>
+        <p class="text-sm text-gray-700 mb-1"><span class="font-semibold">Kategori:</span> <span id="modalCategory"></span></p>
+        <p class="text-sm text-gray-700 mb-1"><span class="font-semibold">Alamat:</span> <span id="modalAddress"></span></p>
+        <p class="text-sm text-gray-700"><span class="font-semibold">Tiket:</span> <span id="modalTicket"></span></p>
+        <div class="mt-4 text-right">
+            <button onclick="document.getElementById('detailModal').classList.add('hidden')" class="bg-gray-300 text-gray-700 px-4 py-1 rounded hover:bg-gray-400">Tutup</button>
+        </div>
+    </div>
+</div>
+
 {{-- Leaflet --}}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
@@ -58,6 +72,19 @@
 </style>
 
 <script>
+    const data = @json($destinations);
+
+    function showDetail(id) {
+        const dest = data.find(d => d.id === id);
+        if (dest) {
+            document.getElementById('modalName').innerText = dest.name;
+            document.getElementById('modalCategory').innerText = dest.category?.name || '-';
+            document.getElementById('modalAddress').innerText = dest.address;
+            document.getElementById('modalTicket').innerText = dest.ticket_price || 'Gratis / Tidak disebutkan';
+            document.getElementById('detailModal').classList.remove('hidden');
+        }
+    }
+
     document.addEventListener("DOMContentLoaded", function () {
         const map = L.map('map').setView([-6.2, 106.8], 12);
 
@@ -65,13 +92,13 @@
             attribution: '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>'
         }).addTo(map);
 
-        @foreach ($destinations as $dest)
-            @if ($dest->latitude && $dest->longitude)
-                L.marker([{{ $dest->latitude }}, {{ $dest->longitude }}])
+        data.forEach(dest => {
+            if (dest.latitude && dest.longitude) {
+                L.marker([dest.latitude, dest.longitude])
                     .addTo(map)
-                    .bindPopup(`<strong>{{ $dest->name }}</strong><br>{{ $dest->address }}<br><em>{{ $dest->category->name ?? '-' }}</em>`);
-            @endif
-        @endforeach
+                    .bindPopup(`<strong>${dest.name}</strong><br>${dest.address}<br><em>${dest.category?.name || '-'}</em>`);
+            }
+        });
     });
 </script>
 @endsection
