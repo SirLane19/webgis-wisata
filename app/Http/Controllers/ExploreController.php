@@ -10,7 +10,6 @@ class ExploreController extends Controller
 {
     public function index(Request $request)
     {
-        // Ambil data destinasi dengan kategori (eager loading)
         $destinations = Destination::with('category')
             ->when($request->search, function ($query, $search) {
                 $query->where('name', 'like', '%' . $search . '%');
@@ -22,7 +21,6 @@ class ExploreController extends Controller
             ->paginate(8)
             ->withQueryString();
 
-        // Buat array untuk frontend map (photo sudah jadi URL penuh)
         $destinationArray = $destinations->getCollection()->map(function ($dest) {
             return [
                 'id' => $dest->id,
@@ -32,7 +30,7 @@ class ExploreController extends Controller
                 'latitude' => $dest->latitude,
                 'longitude' => $dest->longitude,
                 'ticket_price' => $dest->ticket_price,
-                'photo' => $dest->photo ? asset('storage/photos/' . $dest->photo) : null, // ✅ ini yang diperbaiki
+                'photo' => $dest->photo ? asset('storage/photos/' . $dest->photo) : null,
             ];
         })->values()->all();
 
@@ -43,6 +41,27 @@ class ExploreController extends Controller
             'categories' => $categories,
             'destinationArray' => $destinationArray,
             'orsApiKey' => env('ORS_API_KEY'),
+        ]);
+    }
+
+    // Tambahan untuk halaman statistik
+    public function statistik()
+    {
+        $destinations = Destination::with('category')->get();
+
+        $destinationArray = $destinations->map(function ($dest) {
+            return [
+                'id' => $dest->id,
+                'name' => $dest->name,
+                'category' => $dest->category?->name ?? 'Lainnya',
+                'address' => $dest->address,
+                'ticket_price' => $dest->ticket_price,
+                'photo' => $dest->photo ? asset('storage/photos/' . $dest->photo) : null,
+            ];
+        });
+
+        return view('explore.statistik', [
+            'destinationArray' => $destinationArray
         ]);
     }
 }

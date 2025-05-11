@@ -34,5 +34,8 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('destinations', DestinationController::class);
 });
 
+Route::get('/statistik', [ExploreController::class, 'statistik'])->name('statistik');
+
+
 // Route Auth bawaan Laravel Breeze
 require __DIR__.'/auth.php';

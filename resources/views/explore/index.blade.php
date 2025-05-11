@@ -2,24 +2,19 @@
 
 @section('content')
 <div class="max-w-6xl mx-auto mt-10 px-4">
-    <h1 class="text-3xl font-bold mb-6 text-center">🤝 Eksplorasi Destinasi Wisata</h1>
-
-    {{-- Top Favorit --}}
-    <div class="mb-6 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded shadow">
-        <h2 class="text-lg font-semibold text-yellow-700 mb-2">🔥 Top 3 Favorit</h2>
-        <ul id="favoriteRanking" class="list-disc list-inside text-gray-800 text-sm space-y-1">
-            <li>Loading...</li>
-        </ul>
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+        <h1 class="text-3xl font-bold text-center sm:text-left text-gray-800">🤝 Eksplorasi Destinasi Wisata</h1>
+        <a href="{{ route('statistik') }}" class="inline-block bg-gradient-to-r from-green-500 to-green-700 text-white px-5 py-2 rounded-full shadow hover:brightness-110 transition">📊 Lihat Statistik</a>
     </div>
 
     {{-- Peta --}}
     <div class="mb-10">
-        <h2 class="text-xl font-semibold mb-3">Peta Lokasi</h2>
+        <h2 class="text-xl font-semibold mb-3 text-gray-700">Peta Lokasi</h2>
         <div id="map" class="w-full h-[400px] rounded shadow border"></div>
     </div>
 
     {{-- Form Pencarian & Filter --}}
-    <form method="GET" action="{{ route('explore') }}" class="mb-6 grid gap-3 sm:grid-cols-3">
+    <form method="GET" action="{{ route('explore') }}" class="mb-10 p-4 bg-white shadow rounded grid gap-3 sm:grid-cols-3">
         <input type="text" name="search" placeholder="Cari nama destinasi..." value="{{ request('search') }}"
             class="border p-2 rounded w-full focus:ring focus:ring-blue-200" />
 
@@ -32,24 +27,23 @@
             @endforeach
         </select>
 
-        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">🔎 Cari</button>
+        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition w-full">🔎 Cari</button>
     </form>
 
     {{-- Daftar Destinasi --}}
     <div>
-        <h2 class="text-xl font-semibold mb-4">Hasil Destinasi</h2>
+        <h2 class="text-xl font-semibold mb-4 text-gray-700">Hasil Destinasi</h2>
         <p class="text-sm text-gray-600 mb-2">
             Menampilkan {{ $destinations->firstItem() }} - {{ $destinations->lastItem() }} dari {{ $destinations->total() }} destinasi
         </p>
-        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             @forelse ($destinations as $dest)
-                <div class="border rounded p-4 shadow hover:shadow-md transition bg-white relative">
-                    <div class="mb-2">
-                        <h3 class="text-lg font-bold">{{ $dest->name }}</h3>
-                        <p class="text-blue-600 text-sm">{{ $dest->category->name ?? '-' }}</p>
-                        <p class="text-gray-500 text-sm">{{ $dest->address }}</p>
+                <div class="border rounded-xl p-4 shadow-md hover:shadow-lg transition bg-white">
+                    <div class="mb-3">
+                        <h3 class="text-lg font-semibold text-gray-800">{{ $dest->name }}</h3>
+                        <p class="text-sm text-blue-500">{{ $dest->category->name ?? '-' }}</p>
+                        <p class="text-sm text-gray-500">{{ $dest->address }}</p>
                     </div>
-
                     <div class="flex items-center justify-between">
                         <button
                             type="button"
@@ -63,7 +57,6 @@
                             data-photo="{{ asset('storage/photos/' . $dest->photo) }}">
                             🔍 Detail
                         </button>
-
                         <button class="favorite-btn" data-id="{{ $dest->id }}">
                             <span class="text-xl transition" id="fav-icon-{{ $dest->id }}">🧥</span>
                         </button>
@@ -78,7 +71,7 @@
         </div>
 
         {{-- Pagination --}}
-        <div class="mt-6 flex justify-center">
+        <div class="mt-10 flex justify-center">
             {{ $destinations->onEachSide(1)->withQueryString()->links() }}
         </div>
     </div>
@@ -87,7 +80,7 @@
 {{-- Modal Detail Destinasi --}}
 <div id="detailModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-[1000]">
     <div class="flex items-center justify-center min-h-screen w-full">
-        <div class="bg-white z-[1001] p-6 rounded shadow max-w-md w-full relative transition transform duration-300 scale-95">
+        <div class="bg-white z-[1001] p-6 rounded-xl shadow-lg max-w-md w-full relative transition transform duration-300 scale-95">
             <button onclick="tutupModal()" class="absolute top-3 right-4 text-gray-500 hover:text-black text-xl">&times;</button>
             <h2 class="text-xl font-bold mb-2" id="modalName"></h2>
             <p class="text-sm text-gray-700 mb-1"><span class="font-semibold">Kategori:</span> <span id="modalCategory"></span></p>
@@ -106,19 +99,6 @@
 
 <script>
     let map, userLat, userLng, routingControl;
-
-    function getFavoriteRanking(destinations) {
-        const favorites = JSON.parse(localStorage.getItem('favorites')) || [];
-        const counts = {};
-        favorites.forEach(id => {
-            counts[id] = (counts[id] || 0) + 1;
-        });
-        const sorted = destinations
-            .filter(d => counts[d.id])
-            .sort((a, b) => (counts[b.id] || 0) - (counts[a.id] || 0))
-            .slice(0, 3);
-        return sorted;
-    }
 
     function bukaModal() {
         document.getElementById('detailModal').classList.remove('hidden');
@@ -190,14 +170,6 @@
         }
 
         const data = @json($destinationArray);
-
-        const ranking = getFavoriteRanking(data);
-        const rankingContainer = document.getElementById('favoriteRanking');
-        if (ranking.length === 0) {
-            rankingContainer.innerHTML = '<li class="italic text-gray-500">Belum ada favorit tersimpan</li>';
-        } else {
-            rankingContainer.innerHTML = ranking.map((r, i) => `<li><strong>${i + 1}. ${r.name}</strong> (${r.category})</li>`).join('');
-        }
 
         data.forEach(dest => {
             if (dest.latitude && dest.longitude) {
