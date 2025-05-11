@@ -22,16 +22,27 @@ class ExploreController extends Controller
             ->paginate(8)
             ->withQueryString();
 
-        // Konversi koleksi paginate ke array biasa untuk JavaScript
-        $destinationArray = $destinations->getCollection()->values()->all();
+        // Buat array untuk frontend map (photo sudah jadi URL penuh)
+        $destinationArray = $destinations->getCollection()->map(function ($dest) {
+            return [
+                'id' => $dest->id,
+                'name' => $dest->name,
+                'category' => $dest->category ? $dest->category->name : '-',
+                'address' => $dest->address,
+                'latitude' => $dest->latitude,
+                'longitude' => $dest->longitude,
+                'ticket_price' => $dest->ticket_price,
+                'photo' => $dest->photo ? asset('storage/photos/' . $dest->photo) : null, // ✅ ini yang diperbaiki
+            ];
+        })->values()->all();
 
         $categories = Category::all();
 
-            return view('explore.index', [
-                'destinations' => $destinations,
-                'categories' => $categories,
-                'destinationArray' => $destinations->getCollection()->values()->all(), // ✅ Tambahkan koma
-                'orsApiKey' => env('ORS_API_KEY'), 
-            ]);
+        return view('explore.index', [
+            'destinations' => $destinations,
+            'categories' => $categories,
+            'destinationArray' => $destinationArray,
+            'orsApiKey' => env('ORS_API_KEY'),
+        ]);
     }
 }

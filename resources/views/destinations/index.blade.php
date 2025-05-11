@@ -55,6 +55,7 @@
                     <th class="border px-4 py-2">Kategori</th>
                     <th class="border px-4 py-2">Latitude</th>
                     <th class="border px-4 py-2">Longitude</th>
+                    <th class="border px-4 py-2">Foto</th>
                     <th class="border px-4 py-2 text-center">Aksi</th>
                 </tr>
             </thead>
@@ -66,6 +67,19 @@
                         <td class="px-4 py-2">{{ $dest->category->name ?? '-' }}</td>
                         <td class="px-4 py-2">{{ $dest->latitude }}</td>
                         <td class="px-4 py-2">{{ $dest->longitude }}</td>
+                        <td class="px-4 py-2">
+                            @php
+                                $photoPath = public_path('storage/photos/' . $dest->photo);
+                            @endphp
+                            @if ($dest->photo)
+                                <img src="{{ asset('storage/photos/' . $dest->photo) }}"
+                                    alt="{{ $dest->name }}"
+                                    class="h-16 object-cover mx-auto rounded"
+                                    onerror="this.onerror=null;this.src='{{ asset('img/default.png') }}';">
+                            @else
+                                <span class="text-gray-400 italic">Tidak ada foto</span>
+                            @endif
+                        </td>
                         <td class="px-4 py-2">
                             <div class="flex flex-col sm:flex-row justify-center gap-1 sm:gap-3">
                                 <a href="{{ route('destinations.edit', $dest->id) }}" class="text-blue-600 hover:underline">Edit</a>
@@ -79,14 +93,13 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6" class="text-center text-gray-500 py-6">Belum ada destinasi yang ditambahkan.</td>
+                        <td colspan="7" class="text-center text-gray-500 py-6">Belum ada destinasi yang ditambahkan.</td>
                     </tr>
                 @endforelse
             </tbody>
         </table>
     </div>
 
-    
     {{-- Pagination --}}
     <div class="mt-6">
         {{ $destinations->links() }}
