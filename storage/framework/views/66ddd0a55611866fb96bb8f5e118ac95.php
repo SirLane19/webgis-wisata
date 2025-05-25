@@ -3,8 +3,8 @@
 <?php $__env->startSection('content'); ?>
 <div class="max-w-6xl mx-auto mt-10 px-4">
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-        <h1 class="text-3xl font-bold text-center sm:text-left text-gray-800">🤝 Eksplorasi Destinasi Wisata</h1>
-        <a href="<?php echo e(route('statistik')); ?>" class="inline-block bg-gradient-to-r from-green-500 to-green-700 text-white px-5 py-2 rounded-full shadow hover:brightness-110 transition">📊 Lihat Statistik</a>
+        <h1 class="text-3xl font-bold text-center sm:text-left text-gray-800">Eksplorasi Destinasi Wisata</h1>
+        <a href="<?php echo e(route('statistik')); ?>" class="inline-block bg-gradient-to-r from-green-500 to-green-700 text-white px-5 py-2 rounded-full shadow hover:brightness-110 transition">Lihat Statistik</a>
     </div>
 
     
@@ -15,8 +15,7 @@
 
     
     <form method="GET" action="<?php echo e(route('explore')); ?>" class="mb-10 p-4 bg-white shadow rounded grid gap-3 sm:grid-cols-3">
-        <input type="text" name="search" placeholder="Cari nama destinasi..." value="<?php echo e(request('search')); ?>"
-            class="border p-2 rounded w-full focus:ring focus:ring-blue-200" />
+        <input type="text" name="search" placeholder="Cari nama destinasi..." value="<?php echo e(request('search')); ?>" class="border p-2 rounded w-full focus:ring focus:ring-blue-200" />
 
         <select name="category" class="border p-2 rounded w-full focus:ring focus:ring-blue-200">
             <option value="">-- Semua Kategori --</option>
@@ -39,6 +38,9 @@
         </p>
         <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             <?php $__empty_1 = true; $__currentLoopData = $destinations; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $dest): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                <?php
+                    $schedule = $dest->schedules->first();
+                ?>
                 <div class="border rounded-xl p-4 shadow-md hover:shadow-lg transition bg-white">
                     <div class="mb-3">
                         <h3 class="text-lg font-semibold text-gray-800"><?php echo e($dest->name); ?></h3>
@@ -46,20 +48,21 @@
                         <p class="text-sm text-gray-500"><?php echo e($dest->address); ?></p>
                     </div>
                     <div class="flex items-center justify-between">
-                        <button
-                            type="button"
-                            class="text-sm text-blue-600 hover:underline lihat-detail"
+                        <button type="button" class="text-sm text-blue-600 hover:underline lihat-detail"
                             data-name="<?php echo e($dest->name); ?>"
                             data-category="<?php echo e($dest->category->name ?? '-'); ?>"
                             data-address="<?php echo e($dest->address); ?>"
                             data-ticket="<?php echo e($dest->ticket_price ?? 'Gratis / Tidak disebutkan'); ?>"
+                            data-day="<?php echo e(ucfirst($schedule->day ?? '-')); ?>"
+                            data-open="<?php echo e($schedule?->open_time ?? '-'); ?>"
+                            data-close="<?php echo e($schedule?->close_time ?? '-'); ?>"
                             data-latitude="<?php echo e($dest->latitude); ?>"
                             data-longitude="<?php echo e($dest->longitude); ?>"
                             data-photo="<?php echo e(asset('storage/photos/' . $dest->photo)); ?>">
                             🔍 Detail
                         </button>
                         <button class="favorite-btn" data-id="<?php echo e($dest->id); ?>">
-                            <span class="text-xl transition" id="fav-icon-<?php echo e($dest->id); ?>">🧥</span>
+                            <span class="text-xl transition" id="fav-icon-<?php echo e($dest->id); ?>">⭐</span>
                         </button>
                     </div>
                 </div>
@@ -88,6 +91,9 @@
             <p class="text-sm text-gray-700 mb-1"><span class="font-semibold">Kategori:</span> <span id="modalCategory"></span></p>
             <p class="text-sm text-gray-700 mb-1"><span class="font-semibold">Alamat:</span> <span id="modalAddress"></span></p>
             <p class="text-sm text-gray-700 mb-1"><span class="font-semibold">Tiket:</span> <span id="modalTicket"></span></p>
+            <p class="text-sm text-gray-700 mb-1"><span class="font-semibold">Hari Buka:</span> <span id="modalDay"></span></p>
+            <p class="text-sm text-gray-700 mb-1"><span class="font-semibold">Jam Buka:</span> <span id="modalOpen"></span></p>
+            <p class="text-sm text-gray-700 mb-1"><span class="font-semibold">Jam Tutup:</span> <span id="modalClose"></span></p>
             <img id="modalPhoto" class="w-full mt-3 rounded shadow" alt="Gambar destinasi">
         </div>
     </div>
@@ -130,7 +136,7 @@
                 icon.textContent = '❤️';
                 icon.classList.add('text-red-500');
             } else {
-                icon.textContent = '🧥';
+                icon.textContent = '🫅';
                 icon.classList.remove('text-red-500');
             }
         });
@@ -171,26 +177,7 @@
             });
         }
 
-        const data = <?php echo json_encode($destinationArray, 15, 512) ?>;
-
-        data.forEach(dest => {
-            if (dest.latitude && dest.longitude) {
-                L.marker([dest.latitude, dest.longitude])
-                    .addTo(map)
-                    .bindPopup(`
-                        <div style="max-width: 250px;">
-                            <strong>${dest.name}</strong><br>
-                            <em>Kategori: ${dest.category}</em><br>
-                            Alamat: ${dest.address}<br>
-                            Tiket: ${dest.ticket_price ?? 'Gratis / Tidak disebutkan'}<br>
-                            <img src="${dest.photo}" 
-                                 alt="${dest.name}" 
-                                 style="margin-top: 8px; width: 100%; height: auto; border-radius: 8px;" 
-                                 onerror="this.onerror=null;this.src='/img/default.png';">
-                        </div>
-                    `);
-            }
-        });
+        updateFavoriteIcons();
 
         document.querySelectorAll('.lihat-detail').forEach(button => {
             button.addEventListener('click', function () {
@@ -198,6 +185,9 @@
                 document.getElementById('modalCategory').innerText = this.dataset.category;
                 document.getElementById('modalAddress').innerText = this.dataset.address;
                 document.getElementById('modalTicket').innerText = this.dataset.ticket;
+                document.getElementById('modalDay').innerText = this.dataset.day;
+                document.getElementById('modalOpen').innerText = this.dataset.open;
+                document.getElementById('modalClose').innerText = this.dataset.close;
                 document.getElementById('modalPhoto').src = this.dataset.photo;
                 bukaModal();
 
@@ -210,8 +200,6 @@
         document.getElementById('detailModal').addEventListener('click', function (e) {
             if (e.target === this) tutupModal();
         });
-
-        updateFavoriteIcons();
 
         document.querySelectorAll('.favorite-btn').forEach(btn => {
             btn.addEventListener('click', function (e) {

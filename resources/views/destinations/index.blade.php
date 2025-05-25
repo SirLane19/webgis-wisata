@@ -56,70 +56,91 @@
                     <th class="border px-4 py-2">Latitude</th>
                     <th class="border px-4 py-2">Longitude</th>
                     <th class="border px-4 py-2">Foto</th>
+                    <th class="border px-4 py-2">Hari Buka</th>
+                    <th class="border px-4 py-2">Jam Buka</th>
+                    <th class="border px-4 py-2">Jam Tutup</th>
+                    <th class="border px-4 py-2 text-center">Status</th>
                     <th class="border px-4 py-2 text-center">Aksi</th>
                 </tr>
             </thead>
             <tbody class="text-gray-800 break-words">
-                @forelse ($destinations as $dest)
-                    <tr class="border-t hover:bg-gray-50">
-                        <td class="px-4 py-2">{{ $dest->name }}</td>
-                        <td class="px-4 py-2">{{ $dest->address }}</td>
-                        <td class="px-4 py-2">{{ $dest->category->name ?? '-' }}</td>
-                        <td class="px-4 py-2">{{ $dest->latitude }}</td>
-                        <td class="px-4 py-2">{{ $dest->longitude }}</td>
-                        <td class="px-4 py-2">
-                            @php
-                                $photoPath = public_path('storage/photos/' . $dest->photo);
-                            @endphp
-                            @if ($dest->photo)
-                                <img src="{{ asset('storage/photos/' . $dest->photo) }}"
-                                    alt="{{ $dest->name }}"
-                                    class="h-16 object-cover mx-auto rounded"
-                                    onerror="this.onerror=null;this.src='{{ asset('img/default.png') }}';">
-                            @else
-                                <span class="text-gray-400 italic">Tidak ada foto</span>
-                            @endif
-                        </td>
-                        <td class="px-4 py-2">
-                            <div class="flex flex-col sm:flex-row justify-center gap-1 sm:gap-3">
-                                <a href="{{ route('destinations.edit', $dest->id) }}" class="text-blue-600 hover:underline">Edit</a>
-                                <form action="{{ route('destinations.destroy', $dest->id) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus destinasi ini?')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="text-red-600 hover:underline">Hapus</button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="7" class="text-center text-gray-500 py-6">Belum ada destinasi yang ditambahkan.</td>
-                    </tr>
-                @endforelse
-            </tbody>
+            @forelse ($destinations as $dest)
+                @php
+                    $now = \Carbon\Carbon::now();
+                    $dayName = strtolower($now->format('l'));
+                    $isOpenToday = $dest->schedules->firstWhere('day', $dayName);
+                    $isOpen = false;
+
+                    if ($isOpenToday && $isOpenToday->open_time && $isOpenToday->close_time) {
+                        try {
+                            $openTime = \Carbon\Carbon::createFromTimeString($isOpenToday->open_time);
+                            $closeTime = \Carbon\Carbon::createFromTimeString($isOpenToday->close_time);
+                            $isOpen = $now->between($openTime, $closeTime);
+                        } catch (Exception $e) {
+                            $isOpen = false;
+                        }
+                    }
+                @endphp
+                <tr class="border-t hover:bg-gray-50">
+                    <td class="px-4 py-2">{{ $dest->name }}</td>
+                    <td class="px-4 py-2">{{ $dest->address }}</td>
+                    <td class="px-4 py-2">{{ $dest->category->name ?? '-' }}</td>
+                    <td class="px-4 py-2">{{ $dest->latitude }}</td>
+                    <td class="px-4 py-2">{{ $dest->longitude }}</td>
+                    <td class="px-4 py-2">
+                        @if ($dest->photo)
+                            <img src="{{ asset('storage/photos/' . $dest->photo) }}" alt="{{ $dest->name }}" class="h-16 object-cover mx-auto rounded" onerror="this.onerror=null;this.src='{{ asset('img/default.png') }}';">
+                        @else
+                            <span class="text-gray-400 italic">Tidak ada foto</span>
+                        @endif
+                    </td>
+                    <td class="px-4 py-2">
+                        {{ $isOpenToday && $isOpenToday->day ? ucfirst($isOpenToday->day) : '-' }}
+                    </td>
+                    <td class="px-4 py-2">
+                        {{ $isOpenToday && $isOpenToday->open_time ? \Carbon\Carbon::parse($isOpenToday->open_time)->format('H:i') : '-' }}
+                    </td>
+                    <td class="px-4 py-2">
+                        {{ $isOpenToday && $isOpenToday->close_time ? \Carbon\Carbon::parse($isOpenToday->close_time)->format('H:i') : '-' }}
+                    </td>
+                    <td class="px-4 py-2 font-semibold {{ $isOpen ? 'text-green-600' : 'text-red-500' }}">
+                        {{ $isOpen ? 'Buka' : 'Tutup' }}
+                    </td>
+                    <td class="px-4 py-2">
+                        <div class="flex flex-col sm:flex-row justify-center gap-1 sm:gap-3">
+                            <a href="{{ route('destinations.edit', $dest->id) }}" class="text-blue-600 hover:underline">Edit</a>
+                            <form action="{{ route('destinations.destroy', $dest->id) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus destinasi ini?')">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="text-red-600 hover:underline">Hapus</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="11" class="text-center text-gray-500 py-6">Belum ada destinasi yang ditambahkan.</td>
+                </tr>
+            @endforelse
+</tbody>
         </table>
     </div>
 
-    {{-- Pagination --}}
     <div class="mt-6">
         {{ $destinations->links() }}
     </div>
 
-    {{-- Link Balik ke Dashboard --}}
     <div class="mt-6">
         <a href="{{ route('dashboard') }}" class="text-blue-600 hover:underline">← Kembali ke Dashboard</a>
     </div>
 
-    {{-- PETA --}}
     <div class="mt-12">
         <h3 class="text-xl font-semibold mb-4">📍 Peta Lokasi Destinasi</h3>
         <div class="rounded overflow-hidden border border-gray-300 shadow w-full" style="height: 500px;" id="map"></div>
     </div>
 </div>
 
-{{-- Leaflet CSS --}}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
-{{-- Leaflet JS --}}
 <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
 
 <style>

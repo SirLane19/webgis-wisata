@@ -3,8 +3,8 @@
 @section('content')
 <div class="max-w-6xl mx-auto mt-10 px-4">
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-        <h1 class="text-3xl font-bold text-center sm:text-left text-gray-800">🤝 Eksplorasi Destinasi Wisata</h1>
-        <a href="{{ route('statistik') }}" class="inline-block bg-gradient-to-r from-green-500 to-green-700 text-white px-5 py-2 rounded-full shadow hover:brightness-110 transition">📊 Lihat Statistik</a>
+        <h1 class="text-3xl font-bold text-center sm:text-left text-gray-800">Eksplorasi Destinasi Wisata</h1>
+        <a href="{{ route('statistik') }}" class="inline-block bg-gradient-to-r from-green-500 to-green-700 text-white px-5 py-2 rounded-full shadow hover:brightness-110 transition">Lihat Statistik</a>
     </div>
 
     {{-- Peta --}}
@@ -15,8 +15,7 @@
 
     {{-- Form Pencarian & Filter --}}
     <form method="GET" action="{{ route('explore') }}" class="mb-10 p-4 bg-white shadow rounded grid gap-3 sm:grid-cols-3">
-        <input type="text" name="search" placeholder="Cari nama destinasi..." value="{{ request('search') }}"
-            class="border p-2 rounded w-full focus:ring focus:ring-blue-200" />
+        <input type="text" name="search" placeholder="Cari nama destinasi..." value="{{ request('search') }}" class="border p-2 rounded w-full focus:ring focus:ring-blue-200" />
 
         <select name="category" class="border p-2 rounded w-full focus:ring focus:ring-blue-200">
             <option value="">-- Semua Kategori --</option>
@@ -38,6 +37,9 @@
         </p>
         <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             @forelse ($destinations as $dest)
+                @php
+                    $schedule = $dest->schedules->first();
+                @endphp
                 <div class="border rounded-xl p-4 shadow-md hover:shadow-lg transition bg-white">
                     <div class="mb-3">
                         <h3 class="text-lg font-semibold text-gray-800">{{ $dest->name }}</h3>
@@ -45,20 +47,21 @@
                         <p class="text-sm text-gray-500">{{ $dest->address }}</p>
                     </div>
                     <div class="flex items-center justify-between">
-                        <button
-                            type="button"
-                            class="text-sm text-blue-600 hover:underline lihat-detail"
+                        <button type="button" class="text-sm text-blue-600 hover:underline lihat-detail"
                             data-name="{{ $dest->name }}"
                             data-category="{{ $dest->category->name ?? '-' }}"
                             data-address="{{ $dest->address }}"
                             data-ticket="{{ $dest->ticket_price ?? 'Gratis / Tidak disebutkan' }}"
+                            data-day="{{ ucfirst($schedule->day ?? '-') }}"
+                            data-open="{{ $schedule?->open_time ?? '-' }}"
+                            data-close="{{ $schedule?->close_time ?? '-' }}"
                             data-latitude="{{ $dest->latitude }}"
                             data-longitude="{{ $dest->longitude }}"
                             data-photo="{{ asset('storage/photos/' . $dest->photo) }}">
                             🔍 Detail
                         </button>
                         <button class="favorite-btn" data-id="{{ $dest->id }}">
-                            <span class="text-xl transition" id="fav-icon-{{ $dest->id }}">🧥</span>
+                            <span class="text-xl transition" id="fav-icon-{{ $dest->id }}">⭐</span>
                         </button>
                     </div>
                 </div>
@@ -86,6 +89,9 @@
             <p class="text-sm text-gray-700 mb-1"><span class="font-semibold">Kategori:</span> <span id="modalCategory"></span></p>
             <p class="text-sm text-gray-700 mb-1"><span class="font-semibold">Alamat:</span> <span id="modalAddress"></span></p>
             <p class="text-sm text-gray-700 mb-1"><span class="font-semibold">Tiket:</span> <span id="modalTicket"></span></p>
+            <p class="text-sm text-gray-700 mb-1"><span class="font-semibold">Hari Buka:</span> <span id="modalDay"></span></p>
+            <p class="text-sm text-gray-700 mb-1"><span class="font-semibold">Jam Buka:</span> <span id="modalOpen"></span></p>
+            <p class="text-sm text-gray-700 mb-1"><span class="font-semibold">Jam Tutup:</span> <span id="modalClose"></span></p>
             <img id="modalPhoto" class="w-full mt-3 rounded shadow" alt="Gambar destinasi">
         </div>
     </div>
@@ -128,7 +134,7 @@
                 icon.textContent = '❤️';
                 icon.classList.add('text-red-500');
             } else {
-                icon.textContent = '🧥';
+                icon.textContent = '🫅';
                 icon.classList.remove('text-red-500');
             }
         });
@@ -169,26 +175,7 @@
             });
         }
 
-        const data = @json($destinationArray);
-
-        data.forEach(dest => {
-            if (dest.latitude && dest.longitude) {
-                L.marker([dest.latitude, dest.longitude])
-                    .addTo(map)
-                    .bindPopup(`
-                        <div style="max-width: 250px;">
-                            <strong>${dest.name}</strong><br>
-                            <em>Kategori: ${dest.category}</em><br>
-                            Alamat: ${dest.address}<br>
-                            Tiket: ${dest.ticket_price ?? 'Gratis / Tidak disebutkan'}<br>
-                            <img src="${dest.photo}" 
-                                 alt="${dest.name}" 
-                                 style="margin-top: 8px; width: 100%; height: auto; border-radius: 8px;" 
-                                 onerror="this.onerror=null;this.src='/img/default.png';">
-                        </div>
-                    `);
-            }
-        });
+        updateFavoriteIcons();
 
         document.querySelectorAll('.lihat-detail').forEach(button => {
             button.addEventListener('click', function () {
@@ -196,6 +183,9 @@
                 document.getElementById('modalCategory').innerText = this.dataset.category;
                 document.getElementById('modalAddress').innerText = this.dataset.address;
                 document.getElementById('modalTicket').innerText = this.dataset.ticket;
+                document.getElementById('modalDay').innerText = this.dataset.day;
+                document.getElementById('modalOpen').innerText = this.dataset.open;
+                document.getElementById('modalClose').innerText = this.dataset.close;
                 document.getElementById('modalPhoto').src = this.dataset.photo;
                 bukaModal();
 
@@ -208,8 +198,6 @@
         document.getElementById('detailModal').addEventListener('click', function (e) {
             if (e.target === this) tutupModal();
         });
-
-        updateFavoriteIcons();
 
         document.querySelectorAll('.favorite-btn').forEach(btn => {
             btn.addEventListener('click', function (e) {

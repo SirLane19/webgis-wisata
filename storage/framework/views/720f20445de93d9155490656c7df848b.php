@@ -58,71 +58,96 @@
                     <th class="border px-4 py-2">Latitude</th>
                     <th class="border px-4 py-2">Longitude</th>
                     <th class="border px-4 py-2">Foto</th>
+                    <th class="border px-4 py-2">Hari Buka</th>
+                    <th class="border px-4 py-2">Jam Buka</th>
+                    <th class="border px-4 py-2">Jam Tutup</th>
+                    <th class="border px-4 py-2 text-center">Status</th>
                     <th class="border px-4 py-2 text-center">Aksi</th>
                 </tr>
             </thead>
             <tbody class="text-gray-800 break-words">
-                <?php $__empty_1 = true; $__currentLoopData = $destinations; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $dest): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
-                    <tr class="border-t hover:bg-gray-50">
-                        <td class="px-4 py-2"><?php echo e($dest->name); ?></td>
-                        <td class="px-4 py-2"><?php echo e($dest->address); ?></td>
-                        <td class="px-4 py-2"><?php echo e($dest->category->name ?? '-'); ?></td>
-                        <td class="px-4 py-2"><?php echo e($dest->latitude); ?></td>
-                        <td class="px-4 py-2"><?php echo e($dest->longitude); ?></td>
-                        <td class="px-4 py-2">
-                            <?php
-                                $photoPath = public_path('storage/photos/' . $dest->photo);
-                            ?>
-                            <?php if($dest->photo): ?>
-                                <img src="<?php echo e(asset('storage/photos/' . $dest->photo)); ?>"
-                                    alt="<?php echo e($dest->name); ?>"
-                                    class="h-16 object-cover mx-auto rounded"
-                                    onerror="this.onerror=null;this.src='<?php echo e(asset('img/default.png')); ?>';">
-                            <?php else: ?>
-                                <span class="text-gray-400 italic">Tidak ada foto</span>
-                            <?php endif; ?>
-                        </td>
-                        <td class="px-4 py-2">
-                            <div class="flex flex-col sm:flex-row justify-center gap-1 sm:gap-3">
-                                <a href="<?php echo e(route('destinations.edit', $dest->id)); ?>" class="text-blue-600 hover:underline">Edit</a>
-                                <form action="<?php echo e(route('destinations.destroy', $dest->id)); ?>" method="POST" onsubmit="return confirm('Yakin ingin menghapus destinasi ini?')">
-                                    <?php echo csrf_field(); ?>
-                                    <?php echo method_field('DELETE'); ?>
-                                    <button type="submit" class="text-red-600 hover:underline">Hapus</button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
-                    <tr>
-                        <td colspan="7" class="text-center text-gray-500 py-6">Belum ada destinasi yang ditambahkan.</td>
-                    </tr>
-                <?php endif; ?>
-            </tbody>
+            <?php $__empty_1 = true; $__currentLoopData = $destinations; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $dest): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                <?php
+                    $now = \Carbon\Carbon::now();
+                    $dayName = strtolower($now->format('l'));
+                    $isOpenToday = $dest->schedules->firstWhere('day', $dayName);
+                    $isOpen = false;
+
+                    if ($isOpenToday && $isOpenToday->open_time && $isOpenToday->close_time) {
+                        try {
+                            $openTime = \Carbon\Carbon::createFromTimeString($isOpenToday->open_time);
+                            $closeTime = \Carbon\Carbon::createFromTimeString($isOpenToday->close_time);
+                            $isOpen = $now->between($openTime, $closeTime);
+                        } catch (Exception $e) {
+                            $isOpen = false;
+                        }
+                    }
+                ?>
+                <tr class="border-t hover:bg-gray-50">
+                    <td class="px-4 py-2"><?php echo e($dest->name); ?></td>
+                    <td class="px-4 py-2"><?php echo e($dest->address); ?></td>
+                    <td class="px-4 py-2"><?php echo e($dest->category->name ?? '-'); ?></td>
+                    <td class="px-4 py-2"><?php echo e($dest->latitude); ?></td>
+                    <td class="px-4 py-2"><?php echo e($dest->longitude); ?></td>
+                    <td class="px-4 py-2">
+                        <?php if($dest->photo): ?>
+                            <img src="<?php echo e(asset('storage/photos/' . $dest->photo)); ?>" alt="<?php echo e($dest->name); ?>" class="h-16 object-cover mx-auto rounded" onerror="this.onerror=null;this.src='<?php echo e(asset('img/default.png')); ?>';">
+                        <?php else: ?>
+                            <span class="text-gray-400 italic">Tidak ada foto</span>
+                        <?php endif; ?>
+                    </td>
+                    <td class="px-4 py-2">
+                        <?php echo e($isOpenToday && $isOpenToday->day ? ucfirst($isOpenToday->day) : '-'); ?>
+
+                    </td>
+                    <td class="px-4 py-2">
+                        <?php echo e($isOpenToday && $isOpenToday->open_time ? \Carbon\Carbon::parse($isOpenToday->open_time)->format('H:i') : '-'); ?>
+
+                    </td>
+                    <td class="px-4 py-2">
+                        <?php echo e($isOpenToday && $isOpenToday->close_time ? \Carbon\Carbon::parse($isOpenToday->close_time)->format('H:i') : '-'); ?>
+
+                    </td>
+                    <td class="px-4 py-2 font-semibold <?php echo e($isOpen ? 'text-green-600' : 'text-red-500'); ?>">
+                        <?php echo e($isOpen ? 'Buka' : 'Tutup'); ?>
+
+                    </td>
+                    <td class="px-4 py-2">
+                        <div class="flex flex-col sm:flex-row justify-center gap-1 sm:gap-3">
+                            <a href="<?php echo e(route('destinations.edit', $dest->id)); ?>" class="text-blue-600 hover:underline">Edit</a>
+                            <form action="<?php echo e(route('destinations.destroy', $dest->id)); ?>" method="POST" onsubmit="return confirm('Yakin ingin menghapus destinasi ini?')">
+                                <?php echo csrf_field(); ?>
+                                <?php echo method_field('DELETE'); ?>
+                                <button type="submit" class="text-red-600 hover:underline">Hapus</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
+                <tr>
+                    <td colspan="11" class="text-center text-gray-500 py-6">Belum ada destinasi yang ditambahkan.</td>
+                </tr>
+            <?php endif; ?>
+</tbody>
         </table>
     </div>
 
-    
     <div class="mt-6">
         <?php echo e($destinations->links()); ?>
 
     </div>
 
-    
     <div class="mt-6">
         <a href="<?php echo e(route('dashboard')); ?>" class="text-blue-600 hover:underline">← Kembali ke Dashboard</a>
     </div>
 
-    
     <div class="mt-12">
         <h3 class="text-xl font-semibold mb-4">📍 Peta Lokasi Destinasi</h3>
         <div class="rounded overflow-hidden border border-gray-300 shadow w-full" style="height: 500px;" id="map"></div>
     </div>
 </div>
 
-
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
-
 <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
 
 <style>
