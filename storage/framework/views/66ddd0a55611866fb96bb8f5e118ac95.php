@@ -40,12 +40,19 @@
             <?php $__empty_1 = true; $__currentLoopData = $destinations; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $dest): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                 <?php
                     $schedule = $dest->schedules->first();
+                    $now = \Carbon\Carbon::now();
+                    $open = $schedule?->open_time;
+                    $close = $schedule?->close_time;
+                    $day = strtolower($schedule?->day);
+                    $today = strtolower($now->format('l'));
+                    $status = ($day === $today && $open && $close && $now->format('H:i') >= $open && $now->format('H:i') <= $close) ? 'Buka' : 'Tutup';
                 ?>
                 <div class="border rounded-xl p-4 shadow-md hover:shadow-lg transition bg-white">
                     <div class="mb-3">
                         <h3 class="text-lg font-semibold text-gray-800"><?php echo e($dest->name); ?></h3>
                         <p class="text-sm text-blue-500"><?php echo e($dest->category->name ?? '-'); ?></p>
                         <p class="text-sm text-gray-500"><?php echo e($dest->address); ?></p>
+                        <p class="text-sm mt-1">Status: <span class="font-semibold <?php echo e($status === 'Buka' ? 'text-green-600' : 'text-red-500'); ?>"><?php echo e($status); ?></span></p>
                     </div>
                     <div class="flex items-center justify-between">
                         <button type="button" class="text-sm text-blue-600 hover:underline lihat-detail"
